@@ -51,6 +51,7 @@ class ViewController: UICollectionViewController, UINavigationControllerDelegate
         let ac = UIAlertController(title: "Connect to others", message: nil, preferredStyle: .alert)
         ac.addAction(UIAlertAction(title: "Host a session", style: .default, handler: startHosting))
         ac.addAction(UIAlertAction(title: "Join a session", style: .default, handler: joinSession))
+        ac.addAction(UIAlertAction(title: "Devices nearby", style: .default, handler: listDevices))
         ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
         present(ac, animated: true)
     }
@@ -66,6 +67,20 @@ class ViewController: UICollectionViewController, UINavigationControllerDelegate
         let mcBrowser = MCBrowserViewController(serviceType: "hwsselfieshare", session: mcSession)
         mcBrowser.delegate = self
         present(mcBrowser, animated: true)
+    }
+    
+    func listDevices(action: UIAlertAction) {
+        guard let mcSession = mcSession else { return }
+        
+        var devices = ""
+        
+        mcSession.connectedPeers.forEach { (peer) in
+            devices.append(peer.displayName + "\n")
+        }
+        
+        let ac = UIAlertController(title: "Devices nearby", message: devices, preferredStyle: .alert)
+        ac.addAction(UIAlertAction(title: "OK", style: .default))
+        present(ac, animated: true)
     }
     
     func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
@@ -107,6 +122,11 @@ class ViewController: UICollectionViewController, UINavigationControllerDelegate
             print("Connecting: \(peerID.displayName)")
         case .notConnected:
             print("Not Connected: \(peerID.displayName)")
+            DispatchQueue.main.async { [weak self] in
+                let ac = UIAlertController(title: "Disconnected!", message: "\(peerID.displayName) has left the network", preferredStyle: .alert)
+                ac.addAction(UIAlertAction(title: "OK", style: .default))
+                self?.present(ac, animated: true)
+            }
         @unknown default:
             print("Unknown state receiver: \(peerID.displayName)")
         }
